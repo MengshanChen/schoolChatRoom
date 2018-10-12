@@ -42,10 +42,10 @@ public class Server {
 
 				//client start 
 				current_client.start();
-				System.out.println("Client "  + clientNum + " is connected!");
+				System.out.println("User "  + clientNum + " is connected!");
 				clientNum++;
 			} catch (IOException e) {
-				System.out.println("Client could not be connected");
+				System.out.println("User could not be connected");
 			}
 		}
 	}
@@ -83,7 +83,10 @@ class clientThread extends Thread {
 			String name;
 			String campusId;
 			String email;
+
+			//sever never stop
 			while (true) {
+				//synchronize all the threads to be asked the same questions 
 				synchronized(this)
 				{
 					/***** Id ******/
@@ -124,7 +127,7 @@ class clientThread extends Thread {
 			if(name.equalsIgnoreCase("expert")){
 				System.out.println("Expert connect"); 
 			} else {
-				System.out.println("Client Name is " + name); 
+				System.out.println("User Name is " + name); 
 				this.os.writeObject("*** Welcome " + name + " to our chat room ***\nEnter /quit to leave the chat room");
 				this.os.writeObject("More school information: https://www.seattleu.edu");
 				this.os.writeObject("More library information: https://www.seattleu.edu/library/");
@@ -136,7 +139,7 @@ class clientThread extends Thread {
 
 			/***** create a user object ******/
 			ArrayList<Student> studentList = new ArrayList<>();
-			//multiple threads
+			//synchroniz all the threads to accept the messages
 			synchronized(this)
 			{
 				for (clientThread current_client : clients)  
@@ -160,7 +163,7 @@ class clientThread extends Thread {
 				}
 			}
 
-			/** Start the conversation */
+			/** Start the conversation never stop except "quit"*/
 			while (true) {
 				this.os.writeObject("Enter:");
 				this.os.flush();
@@ -211,6 +214,7 @@ class clientThread extends Thread {
 			System.out.println(name + " left.");
 			clients.remove(this);
 
+			//synchronize all the threads to receive the same messages
 			synchronized(this) {
 				if (!clients.isEmpty()) {
 					for (clientThread current_client : clients) {
@@ -248,6 +252,7 @@ class clientThread extends Thread {
 	//the message will be sent the particular person
 	void special(String line, String name) throws IOException, ClassNotFoundException {
 		String[] words = line.split(" ", 2); 
+		//require the message length to be longer than 1
 		if (words.length > 1) {
 			words[1] = words[1].trim();
 			if (!words[1].isEmpty()) {

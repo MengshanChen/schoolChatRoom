@@ -40,7 +40,7 @@ public class Client implements Runnable {
 
 		if (client != null && os != null && is != null) {
 			try {
-				//Create a thread to read from the server
+				//Create a thread to read from the server and start it 
 				new Thread(new Client()).start();
 
 				//if the socket is not closed

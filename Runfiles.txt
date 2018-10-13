@@ -1,0 +1,62 @@
+*****Server******
+port number: 2000                                         
+User 1 is connected!
+User Name is erica
+Calling an expert                                          
+User 2 is connected!
+Expert connect
+Message sent by susan
+Message sent by erica
+Message sent by erica
+Message sent by susan
+erica left.
+susan left.
+
+*****Client 1*****
+lease enter your campus id :
+2110000
+Please enter your school email:
+
+Please enter your name :
+erica
+*** Welcome erica to our chat room ***
+Enter /quit to leave the chat room
+More school information: https://www.seattleu.edu
+More library information: https://www.seattleu.edu/library/
+More career information: https://www.seattleu.edu/careerengagement/
+@expert can provide private service
+Total people in the room: 1
+Enter:
+@expert
+Thanks for your waiting. Expert is coming soon...
+Enter:
+expert: susan has joined
+Total people in the room: 2
+<susan> hi, What can I do for you?
+I want to know more about school
+More school information: https://www.seattleu.edu
+Enter:
+Thanks
+Enter:
+<susan> You're welcome
+/quit
+*** Bye! erica ***
+
+*****Client 2*****
+Default Server: localhost, Default Port: 2000
+Please enter your campus id :
+2331021
+Please enter your password:
+123
+Please enter your name :
+susan
+Enter:
+hi, What can I do for you?
+Enter:
+<erica> I want to know more about school
+<erica> Thanks
+You're welcome
+Enter:
+*** The user erica left ***
+/quit
+*** Bye! susan ***

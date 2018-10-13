@@ -6,6 +6,11 @@ public class Student extends User {
         email = "unknown";
     }
 
+    public Student(String name, String id){
+        super(name, id);
+        this.email = "unknown";
+    }
+
     public Student(String name, String id, String email){
         super(name, id);
         if(email.length() < 10){

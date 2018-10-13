@@ -1,21 +1,21 @@
 public class Expert extends User {
-    private String department;
+    private String password;
 
     public Expert(){
         super();
-        department = "unknown";
+        password = "unknown";
     }
 
-    public Expert(String name, String id, String department){
+    public Expert(String name, String id, String password){
         super(name, id);
-        this.department = department;
+        this.password = password;
     }
 
     public String getDepartment(){
-        return department;
+        return password;
     }
 
-    public void setDepartment(String department){
-        this.department = department;
+    public void setDepartment(String password){
+        this.password = password;
     }
 }

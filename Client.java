@@ -28,7 +28,7 @@ public class Client implements Runnable {
 		try {
 			client = new Socket(host, portNumber);
 
-			//reads text from a character-input stream, 
+			//reads text from a character-input stream 
 			inputLine = new BufferedReader(new InputStreamReader(System.in));
 			os = new ObjectOutputStream(client.getOutputStream());
 			is = new ObjectInputStream(client.getInputStream());

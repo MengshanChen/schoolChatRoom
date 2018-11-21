@@ -17,81 +17,75 @@ import java.util.Map;
  * server side: will see the list of Students by using object list
  * Messages will be stored in a file called record
  */
-public class Server {
 
-	private static ServerSocket server = null;
-	private static Socket client = null;
-	public static ArrayList<clientThread> clients = new ArrayList<clientThread>();
-
-	public static void main(String args[]) {
-		int port = 2000;
+ public class Server{
+     private static ServerSocket server = null;
+     private static Socket client = null;
+     public static ArrayList<clientThread> clients = new ArrayList<clientThread>();
+     public static void main(String args[]){
+        int port = 2000;
 		if (args.length < 1){
 			System.out.println("port number: " + port);
 		} else {
 			port = Integer.valueOf(args[0]).intValue();
 			System.out.println("specific port number: " + port);
-		}
-
-		//Open a server socket on the port
-		try {
-			server = new ServerSocket(port);
-		} catch (IOException e) {
+        }
+        
+        try{
+            server = new ServerSocket(port); 
+        } catch (IOException e) {
 			System.out.println("Server Socket cannot be created");
-		}
-
-		//Create a client socket for client
-		int clientNum = 1;
-		while (true) {
-			try {
-				//server accept connection 
-				client = server.accept();
-
-				//create a client thread calling clientThread class
-				clientThread current_client =  new clientThread(client, clients);
-
-				//add current client into client list 
-				clients.add(current_client);
-
-				//client start 
-				current_client.start();
-				System.out.println("User "  + clientNum + " is connected!");
-				clientNum++;
-			} catch (IOException e) {
-				System.out.println("User could not be connected");
-			}
-		}
-	}
-}
+        }
+		
+		/**
+		 * accept() -> start() -> run() 
+		 * accpet connection from the client if host is correct
+		 * create a new object for current client then into list 
+		 * this client will start by calling run() 
+		 */
+        int clientNum = 1;
+        while (true) {
+            try{
+                client = server.accept(); //accept connection 
+                clientThread curr = new clientThread(client, clients); 
+                clients.add(curr); //add into arraylist
+                curr.start(); //start the thread and call run() 
+                System.out.println("User "  + clientNum + " is connected!");
+                clientNum++;
+            }catch (IOException e) {
+                System.out.println("User could not be connected");
+            }
+        }
+     }
+ }
 
 /**
- * This client thread class handles threads 
+ * create clientThread class for each client 
+ * each client will execute run() method;
+ * use ObjectInputStream in to read the input message
+ * use ObjectOutputStream os to print the command
+ * use synchronized to require all user to do the same thing
+ * 
  */
 class clientThread extends Thread {
-	private String clientName = null;
+    private String clientName = null;
+    private ObjectInputStream in = null; //read
+    private ObjectOutputStream os = null;  //write
+    private Socket client = null; 
+    private final ArrayList<clientThread> clients;
+    
+    public clientThread(Socket client, ArrayList<clientThread> clients){
+        this.client = client;
+        this.clients = clients;
+    }
 
-	//stream:in and out
-	private ObjectInputStream in = null;
-	private ObjectOutputStream os = null;
-
-	private Socket client = null;
-
-	//multiple threads 
-	private final ArrayList<clientThread> clients;
-
-	//constructor
-	public clientThread(Socket client, ArrayList<clientThread> clients) {
-		this.client = client;
-		this.clients = clients;
-	}
-
-	//new users enter and start reading names
-	public void run() {
+    //run() is inherited from Thread but needs to be overriden s
+    public void run() {
 		ArrayList<clientThread> clients = this.clients;
-		//hashmap to store the expert id & password
 		HashMap<String, String> expertmap = new HashMap<>();
 		expertmap.put ("2331021", "123");
 		expertmap.put ("2331022", "456");
-		expertmap.put ("2331022", "456");
+		expertmap.put ("2331023", "789");
 		
 		/***** create a user object ******/
 		ArrayList<Student> studentList = new ArrayList<>();
@@ -105,7 +99,6 @@ class clientThread extends Thread {
 			}
 			writer = new BufferedWriter(new FileWriter(file));
 			try {
-				//Create input and output streams for this client.
 				in = new ObjectInputStream(client.getInputStream());
 				os = new ObjectOutputStream(client.getOutputStream());
 	
@@ -115,9 +108,16 @@ class clientThread extends Thread {
 				String password;
 				String type;
 	
-				//sever never stop
 				while (true) {
-					//synchronize all the threads to be asked the same questions 
+                    
+                    /**
+                     * synchronize part pf methods; this = a monitor object 
+                     * only one thread can execute inside block synchronized on the same object;
+                     * only block the object, but no mutual exclusions;
+                     * two threads visit differnt object, 
+                     * will do their own things, no interference
+                     * https://blog.csdn.net/zhangqiluGrubby/article/details/80500505
+                     */
 					synchronized(this)
 					{
 						/***** Id ******/
@@ -186,8 +186,7 @@ class clientThread extends Thread {
 					this.os.writeObject("Total people in the room: " + clients.size());
 					this.os.flush();
 				}
-	
-				//synchroniz all the threads to accept the messages
+    
 				synchronized(this)
 				{
 					for (clientThread current_client : clients)  
@@ -234,7 +233,6 @@ class clientThread extends Thread {
 	
 					/** key word respond */
 					if(!type.equalsIgnoreCase("expert")){
-						//start AI key words searching 
 						if(line.contains("school") || line.contains("campus")){
 							this.os.writeObject("More school information: https://www.seattleu.edu");
 						} else if (line.contains("library")) {
@@ -256,29 +254,24 @@ class clientThread extends Thread {
 	
 					//communication types
 					if (line.startsWith("@")) {
-						//private sent it to the given client
 						special(line,name); 
 					} else {
-						//the message is sent to everyone
 						broad(line,name);
 					}
 				}
 	
-				//a user terminate the Session, print it on client 
+				//a user terminate the Session, remove the client
 				this.os.writeObject("*** Bye! " + name + " ***");
 				this.os.flush();
-	
-				//print it on server
 				System.out.println(name + " left.");
 				clients.remove(this);
 	
-				//synchronize all the threads to receive the same messages
 				synchronized(this) {
 					if (!clients.isEmpty()) {
-						for (clientThread current_client : clients) {
-							if (current_client != null && current_client != this && current_client.clientName != null) {
-								current_client.os.writeObject("*** The user " + name + " left ***");
-								current_client.os.flush();
+						for (clientThread curr : clients) {
+							if (curr != null && curr != this && curr.clientName != null) {
+								curr.os.writeObject("*** The user " + name + " left ***");
+								curr.os.flush();
 							}
 						}
 					}
@@ -301,45 +294,48 @@ class clientThread extends Thread {
 				System.out.println("Error in closing the BufferedWriter"+ex);
 			}
 		}
-	}
-
-	//the message will be sent to everyone
+    }
+    
+    /**
+     * the message will be sent to everyone
+     */
 	void broad(String line, String name) throws IOException, ClassNotFoundException {
-		synchronized(this){
-			for (clientThread current_client : clients) {
-				if (current_client != null && current_client.clientName != null && current_client.clientName!=this.clientName) 
-				{
-					current_client.os.writeObject("<" + name + "> " + line);
-					current_client.os.flush();
-				}
-			}
-			System.out.println("Message sent by " + this.clientName.substring(1));
-		}
-	}
+        synchronized(this){ //this = current user 
+            for(clientThread curr : clients){
+                if(curr != null && curr.clientName != null && curr.clientName != this.clientName){
+                    curr.os.writeObject("<" + name + "> " + line); //this person sends message
+                    curr.os.flush(); //write out  
+                }
+            }
+            System.out.println("Message sent by " + this.clientName.substring(1));
+        }
+    }
 
-	//the message will be sent the particular person
-	void special(String line, String name) throws IOException, ClassNotFoundException {
-		String[] words = line.split(" ", 2); 
-		//require the message length to be longer than 1
-		if (words.length > 1) {
-			words[1] = words[1].trim();
-			if (!words[1].isEmpty()) {
-				for (clientThread current_client : clients) {
-					if (current_client != null && current_client != this && current_client.clientName != null
-							&& current_client.clientName.equals(words[0])) {
-						current_client.os.writeObject("<" + name + "> " + words[1]);
-						current_client.os.flush();
-						System.out.println(this.clientName.substring(1) + " sent a private message to "+ current_client.clientName.substring(1));
-						this.os.writeObject("Private Message sent to " + current_client.clientName.substring(1));
-						this.os.flush();
-						break;
-					}
-				}
-			}
-		}
-	}
+    /**
+     * the message will be sent to particular user 
+     */
+    void special(String line, String name) throws IOException, ClassNotFoundException {
+        String[] words = line.split(" ", 2); 
+        if(words.length > 1) { //input cannot be null
+            words[1] = words[1].trim(); //remove space
+            if(!words[1].isEmpty()){
+                for(clientThread curr : clients){ //iterate the array to find the person
+                    if(curr != null && curr != this && curr.clientName != null 
+                        && curr.clientName.equals(words[0])){
+                            //send the message to current client whose name is equal 
+                            curr.os.writeObject("<" + name + "> " + words[1]);
+                            curr.os.flush();
+                            //System.out.println(this.clientName.substring(1) + " sent a private message to "+ current_client.clientName.substring(1));
+                            //the person who send the message will be notified 
+                            this.os.writeObject("Private Message sent to " + curr.clientName.substring(1));
+                            this.os.flush();
+                            break;
+
+                    }
+                }
+            }
+
+        }
+    }
 }
-
-
-
 
